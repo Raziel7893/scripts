@@ -3,6 +3,7 @@ Scripts to backup various files
 
 ## backupFiles.py
 The Script copys the data to the TempFolder(base/BackupTemp/name) on the first call. On consecutive calls, if the data has changed, it creates archives of this file(in base/{Backup}/name) then exchanges the copy in TempFolder
+
 On default backupFiles.py only makes copies if there is a difference to the last version and avoids unnecessary copies (comparison could be changed between metadata(shallowCheck=True, default) only and bytewise compare(shallowCheck=False))
 
 ### Help:
