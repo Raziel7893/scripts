@@ -27,7 +27,10 @@ For my usecase it is a backup for a gameserver manager and i wanted to avoid to 
 Make sure both scripts (gameserver-backup.py and backupFiles.py) are in the same folder
 Then just exchange basePath and the files to backup in the middle.
 
-Then you can run it with the WindowsTaskSceduler with following settings: 
+Then you can run the script via any timesceduler you want. The script should be platform independent, so cron should be possible too. But i did not test that yet, so please let me know, if there is any issue or improvement to be done.
+
+### Windows TaskSceduler
+You can setup the script via Windows TaskSceduler with following settings: 
 
 Notes: 
 - My Server runs with a user constantly logged in (because of programs that need a user-session), so my scedule runs under "Run only when user is logged on".
