@@ -7,11 +7,14 @@ On default backupFiles.py only makes copies if there is a difference to the last
 
 ### Help:
 Usage: Prepare both paths at the top of the script (use forward slashes to be sure), then use it like:
+
 Default:
-    backupFiles.py -b baseDir -p Path -n name [-c=i] [-o=j] or
-    python backupFiles.py -b baseDir -p Path -n name [-c=i] [-o=j]
+- backupFiles.py -b baseDir -p Path -n name [-c=i] [-o=j] or
+- python backupFiles.py -b baseDir -p Path -n name [-c=i] [-o=j]
+
 Silent execution:
-    pythonw backupFiles.py -b baseDir -p Path -n name [-c=i] [-o=j]     
+- pythonw backupFiles.py -b baseDir -p Path -n name [-c=i] [-o=j]
+
 It's highly recommended to use either -c or -o.
 The name must be unique as the script uses that to sort and identify the backups.
 The name can contain subfolders to sort your backups into groups
