@@ -1,6 +1,9 @@
 # Prerequisites to both scripts
-python 3.10+ and the arrow package(used for easy datechecking  and calculations). to install (TODO make this optional onyl if versioning by date is choosen
+- python 3.10+
+- the python package: arrow
+  - used for easy datechecking  and calculations. to install
 - pip install arrow
+ (TODO: make this optional, is only used with versioning by date)
 
 # Backups
 Scripts to backup various files 
