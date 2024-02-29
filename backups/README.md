@@ -1,6 +1,10 @@
 # Backups
 Scripts to backup various files 
 
+# Prerequisites to both scripts
+python 3.10+ and the arrow package(used for easy datechecking  and calculations). to install (TODO make this optional onyl if versioning by date is choosen
+- pip install arrow
+
 ## backupFiles.py
 The Script copys the data to the TempFolder(base/BackupTemp/name) on the first call. On consecutive calls, if the data has changed, it creates archives of this file(in base/{Backup}/name) then exchanges the copy in TempFolder
 
