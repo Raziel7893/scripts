@@ -18,7 +18,12 @@ tmpFolder="/BackupTemp/"
 backupFolder="/Backup/"
 
 
-def CheckDiskUsage(base:str):
+def CheckDiskUsage(path:str):
+    base = path
+    if '\\' in base:
+        base = base.split('\\')
+    if '/' in base:
+        base = base.split('/')
     total, used, free = shutil.disk_usage(base)
     if used/total >0.95:
         print(f"Disk is nearly full({int((used/total)*100)}). please check or adjust backup limits!")
@@ -29,6 +34,7 @@ def CheckDiskUsage(base:str):
             messagebox.showwarning("Disk is nearly full", f"Disk is nearly full({int((used/total)*100)}). please check or adjust backup limits!")
         except Exception:
             pass
+        
 
 def make_archive(destPath:str, src:str):
     now = datetime.now()
@@ -163,8 +169,8 @@ def backup(base:str, filePath: str, backupName: str, versionsToKeep:int=0, shall
 
 
 def main() -> int:
-    parser=argparse.ArgumentParser(usage="Prepare both paths at the top of the script (use forward slashes to be sure), then use it like: \n*.py -p x -n y [-c=i] [-o=j] or \npython *.py -p x -n y [-c=i] [-o=j] \nIt's highly recommended to use either -c or -o.", 
-                                   description=f"The Script copys the data to the TempFolder(base/{tmpFolder}) on the first call. On consecutive calls, if the data has changed, it creates archives of this file(in base/{backupFolder}) then exchanges the copy in TempFolder")
+    parser=argparse.ArgumentParser(usage="Prepare both paths at the top of the script (use forward slashes to be sure), then use it like: \nbackupFiles.py -p x -n y [-c=i] [-o=j] or \npython backupFiles.py -p x -n y [-c=i] [-o=j] \nIt's highly recommended to use either -c or -o.", 
+                                   description=f"The Script copys the data to the TempFolder(base/{tmpFolder}/name) on the first call. On consecutive calls, if the data has changed, it creates archives of this file(in base/{backupFolder}/name) then exchanges the copy in TempFolder")
     parser.add_argument("--filePath", '-p', help="file or folder that you want to backup", required=True)
     parser.add_argument("--base", '-b', help="BasePath Of the Backups. base/Backup and base/BackupTemp will be created", required=True)
     parser.add_argument("--name",'-n', help="Name of the Backup, used as sub-path in the backup folders", required=True)
