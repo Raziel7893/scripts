@@ -31,8 +31,8 @@ The name can contain subfolders to sort your backups into groups
 This script basically utilises backupFiles to backup various files without cluttering the TaskSceduler with a call each.
 For my usecase it is a backup for a gameserver manager and i wanted to avoid to backup any binaries dueto storage space. 
 
-Make sure both scripts (gameserver-backup.py and backupFiles.py) are in the same folder
-Then just exchange basePath and the files to backup in the middle.
+Make sure **both scripts (gameserver-backup.py and backupFiles.py) are in the same folder**
+Then just **exchange basePath and the files to backup in the middle of gameserver-backup.py.**
 
 Then you can run the script via any timesceduler you want. The script should be platform independent, so cron should be possible too. But i did not test that yet, so please let me know, if there is any issue or improvement to be done.
 
