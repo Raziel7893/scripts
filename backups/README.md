@@ -57,3 +57,8 @@ Action:
   
 Conditions':
 - Make sure nothing is checked here
+
+### Give Love!
+[Buy me a coffee](https://ko-fi.com/raziel7893)
+
+[Paypal](https://paypal.me/raziel7893)
