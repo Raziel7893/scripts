@@ -4,6 +4,7 @@
   - used for easy datechecking  and calculations. to install
 - pip install arrow
  (TODO: make this optional, is only used with versioning by date)
+- have both python files in one folder 
 
 # Backups
 Scripts to backup various files 
@@ -23,7 +24,7 @@ Default:
 Silent execution:
 - pythonw backupFiles.py -b baseDir -p Path -n name [-c=i] [-o=j]
 
-It's highly recommended to use either -c or -o.
+It's highly recommended to use either -c x (delete after x versions) or -o y(delete after y days).
 The name must be unique as the script uses that to sort and identify the backups.
 The name can contain subfolders to sort your backups into groups
 
