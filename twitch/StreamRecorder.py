@@ -1,16 +1,15 @@
 import datetime
 import enum
-import getopt
 import logging
 import os
 import subprocess
 import streamlink
+import requests
 import sys
 import shutil
 import time
 from threading import Thread
 
-import requests
 
 # Python version between 3.8 and 3.11 needed with modules requests and streamlink
 # Just adjust the 2 variables below.
@@ -20,8 +19,6 @@ streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpgBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
 DestinationPath = "G:\\StreamRecorder\\"
 VideoLibraryPath = "G:\\Streams\\"
-#wird genommen wenn keine übergeben werden
-#DefaultChannels = []
 DefaultChannels = ["staiy", "dieservincentg","dlz_jimmy"]
 
 class TwitchResponseStatus(enum.Enum):
