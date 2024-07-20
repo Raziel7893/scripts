@@ -8,6 +8,7 @@ import requests
 import sys
 import shutil
 import time
+import json
 from threading import Thread
 
 
@@ -17,9 +18,9 @@ from threading import Thread
 
 streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpgBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
-DestinationPath = "G:\\StreamRecorder\\"
-VideoLibraryPath = "G:\\Streams\\"
-DefaultChannels = ["staiy", "dieservincentg","dlz_jimmy"]
+DestinationPath = "d:\\StreamRecorder\\"
+VideoLibraryPath = "d:\\Streams\\"
+DefaultChannels = ["dracon"]
 
 class TwitchResponseStatus(enum.Enum):
     ONLINE = 0
@@ -41,23 +42,27 @@ class TwitchRecorder:
         self.username = username
 
         self.logger = logger
+        self.useApi = False
 
         #twitch configuration
         if (not os.environ.get('TWITCH_CLIENT_ID') or not os.environ.get('TWITCH_CLIENT_SECRET')):
-            self.Logger.error("Twitch api keys not set. not possible to check if stream is online")
-            os._exit(1)
-        self.client_id =  os.environ.get('TWITCH_CLIENT_ID')
-        self.client_secret = os.environ.get('TWITCH_CLIENT_SECRET')
-        self.token_url = "https://id.twitch.tv/oauth2/token?client_id=" + self.client_id + "&client_secret=" \
-                         + self.client_secret + "&grant_type=client_credentials"
-        self.url = "https://api.twitch.tv/helix/streams"
-        self.access_token = self.fetch_access_token()
+            self.logger.error("Twitch api keys not set. reverting to backup")
+            self.useApi = False
+
+        if self.useApi:
+            self.client_id =  os.environ.get('TWITCH_CLIENT_ID')
+            self.client_secret = os.environ.get('TWITCH_CLIENT_SECRET')
+            self.token_url = "https://id.twitch.tv/oauth2/token?client_id=" + self.client_id + "&client_secret=" \
+                             + self.client_secret + "&grant_type=client_credentials"
+            self.url = "https://api.twitch.tv/helix/streams"
+            self.access_token = self.fetch_access_token()
 
     def fetch_access_token(self):
-        token_response = requests.post(self.token_url, timeout=15)
-        token_response.raise_for_status()
-        token = token_response.json()
-        return token["access_token"]
+        if self.useApi:
+            token_response = requests.post(self.token_url, timeout=15)
+            token_response.raise_for_status()
+            token = token_response.json()
+            return token["access_token"]
 
     def run(self):
         # path to recorded stream
@@ -109,28 +114,39 @@ class TwitchRecorder:
             self.logger.error(e)
 
     def check_user(self):
-        info = None
+        title = None
         status = TwitchResponseStatus.ERROR
         try:
-            headers = {"Client-ID": self.client_id, "Authorization": "Bearer " + self.access_token}
-            r = requests.get(self.url + "?user_login=" + self.username, headers=headers, timeout=15)
-            r.raise_for_status()
-            info = r.json()
-            if info is None or not info["data"]:
-                status = TwitchResponseStatus.OFFLINE
+            if(self.useApi):
+                headers = {"Client-ID": self.client_id, "Authorization": "Bearer " + self.access_token}
+                r = requests.get(self.url + "?user_login=" + self.username, headers=headers, timeout=15)
+                r.raise_for_status()
+                info = r.json()
+                if info is None or not info["data"]:
+                    status = TwitchResponseStatus.OFFLINE
+                else:
+                    channels = info["data"]
+                    channel = next(iter(channels), None)
+                    title = channel.get("title")
+                    status = TwitchResponseStatus.ONLINE
             else:
-                status = TwitchResponseStatus.ONLINE
+                if StreamIsOnline(self.username):
+                    status = TwitchResponseStatus.ONLINE
+                    title = GetTitleOfStream(self.username)
+                else:
+                    status = TwitchResponseStatus.OFFLINE
+
         except requests.exceptions.RequestException as e:
             if e.response:
                 if e.response.status_code == 401:
                     status = TwitchResponseStatus.UNAUTHORIZED
                 if e.response.status_code == 404:
                     status = TwitchResponseStatus.NOT_FOUND
-        return status, info
+        return status, title
 
     def loop_check(self, recorded_path, processed_path):
         while True:
-            status, info = self.check_user()   #make threads for all streamers later
+            status, title = self.check_user()   #make threads for all streamers later
             if status == TwitchResponseStatus.NOT_FOUND:
                 self.logger.error("username not found, invalid username or typo")
                 Sleep(self.refresh)
@@ -147,10 +163,8 @@ class TwitchRecorder:
             elif status == TwitchResponseStatus.ONLINE:
                 self.logger.info("%s online, stream recording in session", self.username)
 
-                channels = info["data"]
-                channel = next(iter(channels), None)
                 filename = self.username + " - " + datetime.datetime.now() \
-                    .strftime("%Y-%m-%d %Hh%Mm%Ss") + " - " + channel.get("title") + ".mp4"
+                    .strftime("%Y-%m-%d %Hh%Mm%Ss") + " - " + title + ".mp4"
 
                 # clean filename from unnecessary characters
                 filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
@@ -163,7 +177,7 @@ class TwitchRecorder:
                     logging.CRITICAL("Streamlink not set")
                     
                 subprocess.call(
-                    [streamlinkBinary, "--twitch-disable-ads", "--logfile", "f{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, GetAvailableStreamQuality(self.username), "-o", recorded_filename], shell=True)
+                    [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", "--logfile", "f{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, GetAvailableStreamQuality(self.username), "-o", recorded_filename], shell=True)
                 
                 self.logger.info("recording stream is done, processing video file")
                 if os.path.exists(recorded_filename) is True:
@@ -183,6 +197,11 @@ def main(argv):
     recorderThreads = {}
     recorders = {}
     channelNames = DefaultChannels
+
+    if not os.path.exists(VideoLibraryPath):
+        os.makedirs(VideoLibraryPath)
+    if not os.path.exists(DestinationPath):
+        os.makedirs(DestinationPath)
     
     if(len(argv)>=1):
         channelNames = argv[0].split(",")
@@ -219,6 +238,14 @@ def setup_logger(logger_name, log_file, level=logging.INFO) -> logging.Logger:
     return l
 
 #goes through the available streams and find the nearest to defaultQuality
+def GetTitleOfStream(channelName) -> bool:
+    output = subprocess.Popen([streamlinkBinary, "--json", "twitch.tv/" + channelName], stdout=subprocess.PIPE).communicate()
+    data = json.loads(output[0])
+    return data["metadata"]["title"]
+
+def StreamIsOnline(channelName) -> str:
+    return len(streamlink.streams(f"twitch.tv/{channelName}")) != 0
+
 def GetAvailableStreamQuality(channelName) -> str:
     stream = None
     quality = defaultQuality
