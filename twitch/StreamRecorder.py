@@ -18,8 +18,8 @@ from threading import Thread
 
 streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpgBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
-DestinationPath = "d:\\StreamRecorder\\"
-VideoLibraryPath = "d:\\Streams\\"
+DestinationPath = "G:\\StreamRecorder\\"
+VideoLibraryPath = "G:\\Streams\\"
 DefaultChannels = ["dracon"]
 
 class TwitchResponseStatus(enum.Enum):
@@ -178,6 +178,7 @@ def createThread(recorder : TwitchRecorder) -> Thread:
 
 def setup_logger(logger_name, log_file, level=logging.INFO) -> logging.Logger:
     l = logging.getLogger(logger_name)
+    l.info(f"create sublogger for {logger_name}")
     formatter = logging.Formatter('%(message)s')
     fileHandler = logging.FileHandler(log_file, mode='w')
     fileHandler.setFormatter(formatter)
@@ -191,7 +192,7 @@ def setup_logger(logger_name, log_file, level=logging.INFO) -> logging.Logger:
 
 #goes through the available streams and find the nearest to defaultQuality
 def GetTitleOfStream(channelName) -> bool:
-    output = subprocess.Popen([streamlinkBinary, "--json", "twitch.tv/" + channelName], stdout=subprocess.PIPE).communicate()
+    output = subprocess.Popen([streamlinkBinary, "--json", "twitch.tv/" + channelName], stdout=subprocess.PIPE, shell= True).communicate()
     data = json.loads(output[0])
     return data["metadata"]["title"]
 
