@@ -109,8 +109,8 @@ class TwitchRecorder:
             status, title = self.check_user()  
             if status == TwitchResponseStatus.OFFLINE:
                 if self.postOfflineLog:
-                    self.logger.info("%s currently offline, checking again in %s seconds", self.username, self.refresh)
-                    self.postOfflineLog = False #avoid keeping hdd online when no stream is running 
+                    self.logger.info("%s currently offline, checking again in %s seconds. This log will not reapear to allow HDDs to spin down ", self.username, self.refresh)
+                    self.postOfflineLog = False 
                 Sleep(self.refresh)
             elif status == TwitchResponseStatus.ONLINE:
                 self.postOfflineLog = True
