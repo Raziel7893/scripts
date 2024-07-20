@@ -33,9 +33,9 @@ class TwitchRecorder:
     def __init__(self, username = "", logger = logging.getLogger()):
         # global configuration
         self.disable_ffmpeg = False
-        self.refresh = 15
+        self.refresh = 60
         self.root_path = DestinationPath
-
+        self.postOfflineLog = True
         # user configuration
         self.username = username
 
@@ -54,8 +54,8 @@ class TwitchRecorder:
             os.makedirs(processed_path)
 
         # make sure the interval to check user availability is not less than 60 seconds
-        if self.refresh < 60:
-            self.refresh = 60
+        if self.refresh < 30:
+            self.refresh = 30
 
         # fix videos from previous recording session
         try:
@@ -108,9 +108,12 @@ class TwitchRecorder:
         while True:
             status, title = self.check_user()  
             if status == TwitchResponseStatus.OFFLINE:
-                self.logger.info("%s currently offline, checking again in %s seconds", self.username, self.refresh)
+                if self.postOfflineLog:
+                    self.logger.info("%s currently offline, checking again in %s seconds", self.username, self.refresh)
+                    self.postOfflineLog = False #avoid keeping hdd online when no stream is running 
                 Sleep(self.refresh)
             elif status == TwitchResponseStatus.ONLINE:
+                self.postOfflineLog = True
                 self.logger.info("%s online, stream recording in session", self.username)
 
                 filename = self.username + " - " + datetime.datetime.now() \
