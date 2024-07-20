@@ -1,0 +1,14 @@
+[cli][info] Found matching plugin twitch for URL twitch.tv/dracon
+[cli][info] Available streams: audio_only, 160p (worst), 360p, 480p, 720p, 1080p (best)
+[cli][info] Opening stream: 720p (hls)
+[cli][info] Writing output to
+E:\StreamRecorder\recorded\dracon\dracon - 2024-07-20 12h52m20s - SO REAGIERT DAS INTERNET AUF DAS COMPACT-VERBOT.mp4
+[plugins.twitch][info] Will skip ad segments
+[plugins.twitch][info] Low latency streaming (HLS live edge: 2)
+[plugins.twitch][info] Waiting for pre-roll ads to finish, be patient
+[plugins.twitch][info] Detected advertisement break of 15 seconds
+[stream.hls][info] Filtering out segments and pausing stream output
+[stream.hls][info] Resuming stream output
+[cli][info] Stream ended
+Interrupted! Exiting...
+[cli][info] Closing currently open stream...

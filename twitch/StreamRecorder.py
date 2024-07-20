@@ -3,8 +3,6 @@ import enum
 import logging
 import os
 import subprocess
-import streamlink
-import requests
 import sys
 import shutil
 import time
@@ -191,18 +189,20 @@ def setup_logger(logger_name, log_file, level=logging.INFO) -> logging.Logger:
     return l
 
 #goes through the available streams and find the nearest to defaultQuality
-def GetTitleOfStream(channelName) -> bool:
+def GetStreamData(channelName):
     output = subprocess.Popen([streamlinkBinary, "--json", "twitch.tv/" + channelName], stdout=subprocess.PIPE, shell= True).communicate()
-    data = json.loads(output[0])
-    return data["metadata"]["title"]
+    return json.loads(output[0])
 
-def StreamIsOnline(channelName) -> str:
-    return len(streamlink.streams(f"twitch.tv/{channelName}")) != 0
+def GetTitleOfStream(channelName) -> str:
+    return GetStreamData(channelName)["metadata"]["title"]
+
+def StreamIsOnline(channelName) -> bool:
+    return len(GetStreamData(channelName)["streams"]) != 0
 
 def GetAvailableStreamQuality(channelName) -> str:
     stream = None
     quality = defaultQuality
-    streams = streamlink.streams(f"twitch.tv/{channelName}")
+    streams = GetStreamData(channelName)["streams"]
     if len(streams) < 1:
         return 
     if quality in streams:
