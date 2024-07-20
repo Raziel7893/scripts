@@ -42,27 +42,6 @@ class TwitchRecorder:
         self.username = username
 
         self.logger = logger
-        self.useApi = False
-
-        #twitch configuration
-        if (not os.environ.get('TWITCH_CLIENT_ID') or not os.environ.get('TWITCH_CLIENT_SECRET')):
-            self.logger.error("Twitch api keys not set. reverting to backup")
-            self.useApi = False
-
-        if self.useApi:
-            self.client_id =  os.environ.get('TWITCH_CLIENT_ID')
-            self.client_secret = os.environ.get('TWITCH_CLIENT_SECRET')
-            self.token_url = "https://id.twitch.tv/oauth2/token?client_id=" + self.client_id + "&client_secret=" \
-                             + self.client_secret + "&grant_type=client_credentials"
-            self.url = "https://api.twitch.tv/helix/streams"
-            self.access_token = self.fetch_access_token()
-
-    def fetch_access_token(self):
-        if self.useApi:
-            token_response = requests.post(self.token_url, timeout=15)
-            token_response.raise_for_status()
-            token = token_response.json()
-            return token["access_token"]
 
     def run(self):
         # path to recorded stream
@@ -117,49 +96,22 @@ class TwitchRecorder:
         title = None
         status = TwitchResponseStatus.ERROR
         try:
-            if(self.useApi):
-                headers = {"Client-ID": self.client_id, "Authorization": "Bearer " + self.access_token}
-                r = requests.get(self.url + "?user_login=" + self.username, headers=headers, timeout=15)
-                r.raise_for_status()
-                info = r.json()
-                if info is None or not info["data"]:
-                    status = TwitchResponseStatus.OFFLINE
-                else:
-                    channels = info["data"]
-                    channel = next(iter(channels), None)
-                    title = channel.get("title")
-                    status = TwitchResponseStatus.ONLINE
+            if StreamIsOnline(self.username):
+                status = TwitchResponseStatus.ONLINE
+                title = GetTitleOfStream(self.username)
             else:
-                if StreamIsOnline(self.username):
-                    status = TwitchResponseStatus.ONLINE
-                    title = GetTitleOfStream(self.username)
-                else:
-                    status = TwitchResponseStatus.OFFLINE
+                status = TwitchResponseStatus.OFFLINE
 
-        except requests.exceptions.RequestException as e:
-            if e.response:
-                if e.response.status_code == 401:
-                    status = TwitchResponseStatus.UNAUTHORIZED
-                if e.response.status_code == 404:
-                    status = TwitchResponseStatus.NOT_FOUND
+        except Exception as e:
+            status = TwitchResponseStatus.OFFLINE
         return status, title
 
     def loop_check(self, recorded_path, processed_path):
         while True:
-            status, title = self.check_user()   #make threads for all streamers later
-            if status == TwitchResponseStatus.NOT_FOUND:
-                self.logger.error("username not found, invalid username or typo")
-                Sleep(self.refresh)
-            elif status == TwitchResponseStatus.ERROR:
-                self.logger.error("%s unexpected error. will try again in 5 minutes",
-                              datetime.datetime.now().strftime("%Hh%Mm%Ss"))
-                Sleep(300)
-            elif status == TwitchResponseStatus.OFFLINE:
+            status, title = self.check_user()  
+            if status == TwitchResponseStatus.OFFLINE:
                 self.logger.info("%s currently offline, checking again in %s seconds", self.username, self.refresh)
                 Sleep(self.refresh)
-            elif status == TwitchResponseStatus.UNAUTHORIZED:
-                self.logger.info("unauthorized, will attempt to log back in immediately")
-                self.access_token = self.fetch_access_token()
             elif status == TwitchResponseStatus.ONLINE:
                 self.logger.info("%s online, stream recording in session", self.username)
 
