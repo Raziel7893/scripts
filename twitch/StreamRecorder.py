@@ -86,7 +86,8 @@ class TwitchRecorder:
             subprocess.call(
                 [ffmpgBinary, "-err_detect", "ignore_err", "-i", recorded_filename, "-c", "copy",
                  processed_filename], shell=True)
-            os.remove(recorded_filename)
+            if os.path.exists(processed_filename) 
+                os.remove(recorded_filename)
         except Exception as e:
             self.logger.error(e)
 
@@ -133,6 +134,9 @@ class TwitchRecorder:
                     [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", "--logfile", "f{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, GetAvailableStreamQuality(self.username), "-o", recorded_filename], shell=True)
                 
                 self.logger.info("recording stream is done, processing video file")
+                
+                if not os.path.exists(os.path.join(VideoLibraryPath, self.username)):
+                    os.makedirs(os.path.join(VideoLibraryPath, self.username))
                 if os.path.exists(recorded_filename) is True:
                     self.process_recorded_file(recorded_filename, processed_filename)
                 else:
