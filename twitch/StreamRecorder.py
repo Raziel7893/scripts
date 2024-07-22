@@ -7,6 +7,8 @@ import sys
 import shutil
 import time
 import json
+import glob
+from pathlib import Path
 from threading import Thread
 
 
@@ -16,8 +18,8 @@ from threading import Thread
 
 streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpgBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
-DestinationPath = "G:\\StreamRecorder\\"
-VideoLibraryPath = "G:\\Streams\\"
+DestinationPath = "e:\\StreamRecorder\\"
+VideoLibraryPath = "e:\\Streams\\"
 DefaultChannels = ["dracon"]
 
 class TwitchResponseStatus(enum.Enum):
@@ -86,7 +88,7 @@ class TwitchRecorder:
             subprocess.call(
                 [ffmpgBinary, "-err_detect", "ignore_err", "-i", recorded_filename, "-c", "copy",
                  processed_filename], shell=True)
-            if os.path.exists(processed_filename) 
+            if os.path.exists(processed_filename): 
                 os.remove(recorded_filename)
         except Exception as e:
             self.logger.error(e)
@@ -105,6 +107,14 @@ class TwitchRecorder:
             status = TwitchResponseStatus.OFFLINE
         return status, title
 
+    def getPartString(self) -> int:
+        part = ""
+        destPath = os.path.join(VideoLibraryPath, self.username)
+        files = list(Path(destPath).glob(f'*{datetime.datetime.now().strftime("%Y-%m-%d")}*'))
+        if files and len(files) != 0:
+            part = f" part {len(files)+1}"
+        return part
+
     def loop_check(self, recorded_path, processed_path):
         while True:
             status, title = self.check_user()  
@@ -118,7 +128,7 @@ class TwitchRecorder:
                 self.logger.info("%s online, stream recording in session", self.username)
 
                 filename = self.username + " - " + datetime.datetime.now() \
-                    .strftime("%Y-%m-%d %Hh%Mm%Ss") + " - " + title + ".mp4"
+                    .strftime("%Y-%m-%d") + self.getPartString() +" - " + title + ".mp4"
 
                 # clean filename from unnecessary characters
                 filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
@@ -238,7 +248,6 @@ def ParseInt(value):
       return int(value)
   except:
       return -1
-
 
 def Sleep(duration):    
     try:
