@@ -8,3 +8,6 @@
   - you can add a list of channels to overwrite the channels defined in Global variables of the script
   - Python StreamRecorder.py MyStreamer1,Mystreamer2,Mystreamer2
 
+## WebAccess
+- If you want to access those comfortably i recommend Jellyfin (https://jellyfin.org/)
+- Install and make the DestinationPath to a media library
