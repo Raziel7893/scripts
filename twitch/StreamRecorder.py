@@ -141,7 +141,9 @@ class TwitchRecorder:
                     logging.CRITICAL("Streamlink not set")
                     
                 subprocess.call(
-                    [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", "--logfile", "f{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, GetAvailableStreamQuality(self.username), "-o", recorded_filename], shell=True)
+                    [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", "--logfile", 
+                     "f{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, 
+                     GetAvailableStreamQuality(self.username), "-o", recorded_filename], stdout=subprocess.PIPE, shell=True)
                 
                 self.logger.info("recording stream is done, processing video file")
                 
@@ -254,6 +256,7 @@ def Sleep(duration):
         time.sleep(duration)
     except KeyboardInterrupt:
         os._exit(1)
+
         
 
 if __name__ == "__main__":
