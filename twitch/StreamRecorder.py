@@ -7,7 +7,7 @@ import sys
 import shutil
 import time
 import json
-import glob
+import signal
 from pathlib import Path
 from threading import Thread
 
@@ -176,6 +176,8 @@ def main(argv):
         channelNames = argv[0].split(",")
     print(f"channels to monitor: {' '.join(channelNames)}")
     
+    signal.signal(signal.SIGTERM, sigterm_handler)
+
     for channelName in channelNames:
         recorder = TwitchRecorder(channelName, setup_logger(channelName,f"{DestinationPath}{channelName}twitch-recorder.log"))
         recorders[channelName] = recorder
@@ -186,6 +188,7 @@ def main(argv):
             if not recorderThreads[channelName].is_alive:
                 #recreate thread if it failed
                 recorderThreads[channelName] = createThread(recorders[channelName])
+
 
 def createThread(recorder : TwitchRecorder) -> Thread:
     thread = Thread(target = recorder.run)
@@ -256,6 +259,10 @@ def Sleep(duration):
         time.sleep(duration)
     except KeyboardInterrupt:
         os._exit(1)
+
+def sigterm_handler(_signo, _stack_frame):
+    # Raises SystemExit(0):
+    os._exit(0)
 
         
 
