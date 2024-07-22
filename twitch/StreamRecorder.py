@@ -40,7 +40,7 @@ class TwitchRecorder:
         self.postOfflineLog = True
         # user configuration
         self.username = username
-
+        self.apiReturn = {}
         self.logger = logger
 
     def run(self):
@@ -86,7 +86,7 @@ class TwitchRecorder:
     def ffmpeg_copy_and_fix_errors(self, recorded_filename, processed_filename):
         try:
             subprocess.call(
-                [ffmpgBinary, "-err_detect", "ignore_err", "-i", recorded_filename, "-c", "copy",
+                [ffmpgBinary, "-err_detect", "ignore_err", "-n", "-i", recorded_filename, "-c", "copy",
                  processed_filename], shell=True)
             if os.path.exists(processed_filename): 
                 os.remove(recorded_filename)
@@ -96,16 +96,55 @@ class TwitchRecorder:
     def check_user(self):
         title = None
         status = TwitchResponseStatus.ERROR
+        qualit = "720p"
         try:
-            if StreamIsOnline(self.username):
+            data = self.getStreamData()
+            if self.streamIsOnline(data):
                 status = TwitchResponseStatus.ONLINE
-                title = GetTitleOfStream(self.username)
+                title = self.getTitleOfStream(data)
+                quality = self.getAvailableStreamQuality(data)
             else:
                 status = TwitchResponseStatus.OFFLINE
 
         except Exception as e:
             status = TwitchResponseStatus.OFFLINE
-        return status, title
+        return status, title, quality
+
+    def getStreamData(self):
+        output = subprocess.Popen([streamlinkBinary, "--json", "twitch.tv/" + self.username], stdout=subprocess.PIPE, shell= True).communicate()
+        data = json.loads(output[0])
+        return data
+
+    def getTitleOfStream(self, data) -> str:
+        return data["metadata"]["title"]
+
+    def streamIsOnline(self, data) -> bool:
+        return len(data["streams"]) != 0
+
+    def getAvailableStreamQuality(self, data) -> str:
+        stream = None
+        quality = defaultQuality
+        streams = data["streams"]
+        if len(streams) < 1:
+            return 
+        if quality in streams:
+            return quality
+        if stream:
+            keys = list(streams.keys())
+            for key in keys:
+                targetRes = int(defaultQuality.replace("p"))
+                curRes = int(keys.replace("p"))
+                #get the highst resolution under 720p in case the streamer uses some weird resolutions
+                if not curRes or curRes == -1:
+                    continue
+                if(targetRes < curRes):
+                    quality = key
+                else:
+                    continue
+            return key
+        else:
+            #fallback
+            return "best" 
 
     def getPartString(self) -> int:
         part = ""
@@ -117,7 +156,8 @@ class TwitchRecorder:
 
     def loop_check(self, recorded_path, processed_path):
         while True:
-            status, title = self.check_user()  
+            self.apiReturn = {}
+            status, title, quality = self.check_user()  
             if status == TwitchResponseStatus.OFFLINE:
                 if self.postOfflineLog:
                     self.logger.info("%s currently offline, checking again in %s seconds. This log will not reapear to allow HDDs to spin down ", self.username, self.refresh)
@@ -143,7 +183,7 @@ class TwitchRecorder:
                 subprocess.call(
                     [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", "--logfile", 
                      "f{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, 
-                     GetAvailableStreamQuality(self.username), "-o", recorded_filename], stdout=subprocess.PIPE, shell=True)
+                     quality, "-o", recorded_filename], stdout=subprocess.PIPE, shell=True)
                 
                 self.logger.info("recording stream is done, processing video file")
                 
@@ -210,42 +250,6 @@ def setup_logger(logger_name, log_file, level=logging.INFO) -> logging.Logger:
     l.addHandler(streamHandler)
     return l
 
-#goes through the available streams and find the nearest to defaultQuality
-def GetStreamData(channelName):
-    output = subprocess.Popen([streamlinkBinary, "--json", "twitch.tv/" + channelName], stdout=subprocess.PIPE, shell= True).communicate()
-    return json.loads(output[0])
-
-def GetTitleOfStream(channelName) -> str:
-    return GetStreamData(channelName)["metadata"]["title"]
-
-def StreamIsOnline(channelName) -> bool:
-    return len(GetStreamData(channelName)["streams"]) != 0
-
-def GetAvailableStreamQuality(channelName) -> str:
-    stream = None
-    quality = defaultQuality
-    streams = GetStreamData(channelName)["streams"]
-    if len(streams) < 1:
-        return 
-    if quality in streams:
-        return quality
-    if stream:
-        keys = list(streams.keys())
-        for key in keys:
-            targetRes = int(defaultQuality.replace("p"))
-            curRes = int(keys.replace("p"))
-            #get the highst resolution under 720p in case the streamer uses some weird resolutions
-            if not curRes or curRes == -1:
-                continue
-            if(targetRes < curRes):
-                quality = key
-            else:
-                continue
-        return key
-    else:
-        #fallback
-        return "best" 
-
 def ParseInt(value):
   if value is None:
       return -1
@@ -263,8 +267,6 @@ def Sleep(duration):
 def sigterm_handler(_signo, _stack_frame):
     # Raises SystemExit(0):
     os._exit(0)
-
-        
 
 if __name__ == "__main__":
     main(sys.argv[1:])
