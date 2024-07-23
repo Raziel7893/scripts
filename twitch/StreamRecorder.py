@@ -18,8 +18,8 @@ from threading import Thread
 
 streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpgBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
-DestinationPath = "e:\\StreamRecorder\\"
-VideoLibraryPath = "e:\\Streams\\"
+DestinationPath = "g:\\StreamRecorder\\"
+VideoLibraryPath = "g:\\Streams\\"
 DefaultChannels = ["dracon"]
 
 class TwitchResponseStatus(enum.Enum):
@@ -96,7 +96,7 @@ class TwitchRecorder:
     def check_user(self):
         title = None
         status = TwitchResponseStatus.ERROR
-        qualit = "720p"
+        quality = "720p"
         try:
             data = self.getStreamData()
             if self.streamIsOnline(data):
@@ -182,7 +182,7 @@ class TwitchRecorder:
                     
                 subprocess.call(
                     [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", "--logfile", 
-                     "f{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, 
+                     f"{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, 
                      quality, "-o", recorded_filename], stdout=subprocess.PIPE, shell=True)
                 
                 self.logger.info("recording stream is done, processing video file")
