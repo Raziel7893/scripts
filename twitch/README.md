@@ -11,3 +11,7 @@
 ## WebAccess
 - If you want to access those comfortably i recommend Jellyfin (https://jellyfin.org/)
 - Install and make the DestinationPath to a media library
+
+## Credits
+- Base Scripot used as base:
+  - https://github.com/ancalentari/twitch-stream-recorder/blob/master/twitch-recorder.py
