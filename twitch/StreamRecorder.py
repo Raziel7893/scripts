@@ -16,10 +16,10 @@ from threading import Thread
 # Just adjust the 2 variables below.
 # after it you can start it with Python StreamRecorder.py MyFirstStreamer,MySecondStreamer
 
-streamlinkBinary = "/home/alex/.local/bin/streamlink"
-ffmpegBinary = "/usr/bin/ffmpeg"
-#streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
-#ffmpegBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
+#streamlinkBinary = "/home/alex/.local/bin/streamlink"
+#ffmpegBinary = "/usr/bin/ffmpeg"
+streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
+ffmpegBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
 DestinationPath = "StreamRecorder"
 VideoLibraryPath = "Streams"
 DefaultChannels = ["staiy"]
@@ -87,8 +87,13 @@ class TwitchRecorder:
 
     def ffmpeg_copy_and_fix_errors(self, recorded_filename, processed_filename):
         try:
-            args = f"{ffmpegBinary} -err_detect ignore_err -n -i \'{recorded_filename}\' -c copy \'{processed_filename}\'"
-            self.logger.info(f"starting ffmpeg with args (could take a few minutes without output):{args}")
+            args = None
+            if os.name == 'nt':
+                args = [ffmpegBinary, "-err_detect ignore_err", "-n", "-i", f"\'{recorded_filename}\'", "-c", "copy", f"\'{processed_filename}\'"]
+                self.logger.info(f"Start ffmpeg with args:{' '.join(args)}")
+            else:
+                args = f"{ffmpegBinary} -err_detect ignore_err -n -i \'{recorded_filename}\' -c copy \'{processed_filename}\'"
+                self.logger.info(f"starting ffmpeg with args (could take a few minutes without output):{args}")
             subprocess.call(args, stderr=subprocess.PIPE, shell=True)
             if os.path.exists(processed_filename): 
                 os.remove(recorded_filename)
@@ -113,7 +118,12 @@ class TwitchRecorder:
         return status, title, quality
 
     def getStreamData(self):
-        args = f"{streamlinkBinary} --json twitch.tv/{self.username}"
+        args = None
+        if os.name == 'nt':
+            args = [streamlinkBinary, "--json", f"twitch.tv/{self.username}"]
+        else:
+            args = f"\'{streamlinkBinary}\' --json twitch.tv/{self.username}"
+
         output = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
         data = json.loads(output[0])
         return data
@@ -147,7 +157,7 @@ class TwitchRecorder:
             return key
         else:
             #fallback
-            return "best" 
+            return "720p,480p,best"
 
     def getPartString(self) -> int:
         part = ""
@@ -182,12 +192,19 @@ class TwitchRecorder:
                 # start streamlink process
                 if not os.path.isfile(streamlinkBinary):
                     self.logger.CRITICAL("Streamlink not set")
-                    
-                args = f"{streamlinkBinary} --twitch-disable-ads --twitch-low-latency " + \
+                args = None
+                if os.name == 'nt':
+                    args = [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", 
+                            "--logfile", f"\'{os.path.join(DestinationPath,f'self.username_streamlink.log')}\'", 
+                            f"twitch.tv/{self.username }", f"\'{quality}\'", "-o", "\'{recorded_filename}\'"]
+                    self.logger.info(f"Start StreamLink with args:{' '.join(args)}")
+                else:
+                    args = f"{streamlinkBinary} --twitch-disable-ads --twitch-low-latency " + \
                             f"--logfile \'{os.path.join(DestinationPath,f'self.username_streamlink.log')}\' twitch.tv/{self.username} " + \
-                            f"{quality} -o \'{recorded_filename}\'"
+                            f"{quality} -o \'{recorded_filename}\'"  
+                    self.logger.info(f"Start StreamLink with args:{args}")
                 
-                self.logger.info(f"Start StreamLink with args:{args}")
+                
                 subprocess.call(args, stdout=subprocess.PIPE, shell=True)
                 
                 self.logger.info("recording stream is done, processing video file")
