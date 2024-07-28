@@ -11,17 +11,18 @@ import signal
 from pathlib import Path
 from threading import Thread
 
-# based on https://github.com/ancalentari/twitch-stream-recorder/blob/master/twitch-recorder.py
 
 # Python version between 3.8 and 3.11 needed with modules requests and streamlink
 # Just adjust the 2 variables below.
 # after it you can start it with Python StreamRecorder.py MyFirstStreamer,MySecondStreamer
 
-streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
-ffmpgBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
-DestinationPath = "g:\\StreamRecorder\\"
-VideoLibraryPath = "g:\\Streams\\"
-DefaultChannels = ["dracon"]
+streamlinkBinary = "/home/alex/.local/bin/streamlink"
+ffmpegBinary = "/usr/bin/ffmpeg"
+#streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
+#ffmpegBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
+DestinationPath = "StreamRecorder"
+VideoLibraryPath = "Streams"
+DefaultChannels = ["staiy"]
 
 class TwitchResponseStatus(enum.Enum):
     ONLINE = 0
@@ -86,9 +87,9 @@ class TwitchRecorder:
 
     def ffmpeg_copy_and_fix_errors(self, recorded_filename, processed_filename):
         try:
-            subprocess.call(
-                [ffmpgBinary, "-err_detect", "ignore_err", "-n", "-i", recorded_filename, "-c", "copy",
-                 processed_filename], shell=True)
+            args = f"{ffmpegBinary} -err_detect ignore_err -n -i \'{recorded_filename}\' -c copy \'{processed_filename}\'"
+            self.logger.info(f"starting ffmpeg with args (could take a few minutes without output):{args}")
+            subprocess.call(args, stderr=subprocess.PIPE, shell=True)
             if os.path.exists(processed_filename): 
                 os.remove(recorded_filename)
         except Exception as e:
@@ -112,7 +113,8 @@ class TwitchRecorder:
         return status, title, quality
 
     def getStreamData(self):
-        output = subprocess.Popen([streamlinkBinary, "--json", "twitch.tv/" + self.username], stdout=subprocess.PIPE, shell= True).communicate()
+        args = f"{streamlinkBinary} --json twitch.tv/{self.username}"
+        output = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
         data = json.loads(output[0])
         return data
 
@@ -179,12 +181,14 @@ class TwitchRecorder:
 
                 # start streamlink process
                 if not os.path.isfile(streamlinkBinary):
-                    logging.CRITICAL("Streamlink not set")
+                    self.logger.CRITICAL("Streamlink not set")
                     
-                subprocess.call(
-                    [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", "--logfile", 
-                     f"{DestinationPath}{self.username}_streamlink.log", "twitch.tv/" + self.username, 
-                     quality, "-o", recorded_filename], stdout=subprocess.PIPE, shell=True)
+                args = f"{streamlinkBinary} --twitch-disable-ads --twitch-low-latency " + \
+                            f"--logfile \'{os.path.join(DestinationPath,f'self.username_streamlink.log')}\' twitch.tv/{self.username} " + \
+                            f"{quality} -o \'{recorded_filename}\'"
+                
+                self.logger.info(f"Start StreamLink with args:{args}")
+                subprocess.call(args, stdout=subprocess.PIPE, shell=True)
                 
                 self.logger.info("recording stream is done, processing video file")
                 
@@ -196,7 +200,7 @@ class TwitchRecorder:
                     self.logger.info("skip fixing, file not found")
                     
                 self.logger.info("recording stream is done, processing video file")
-                if os.path.exists(processed_filename) is False: #ffmpg failed, copy without fix
+                if os.path.exists(recorded_filename) and os.path.exists(processed_filename) is False : #ffmpg failed, copy without fix
                     shutil.move(recorded_filename, processed_filename)
 
                 self.logger.info("processing is done, going back to checking...")
@@ -239,12 +243,12 @@ def createThread(recorder : TwitchRecorder) -> Thread:
 
 def setup_logger(logger_name, log_file, level=logging.INFO) -> logging.Logger:
     l = logging.getLogger(logger_name)
-    l.info(f"create sublogger for {logger_name}")
     formatter = logging.Formatter('%(message)s')
     fileHandler = logging.FileHandler(log_file, mode='w')
     fileHandler.setFormatter(formatter)
     streamHandler = logging.StreamHandler()
     streamHandler.setFormatter(formatter)
+    l.info(f"create sublogger for {logger_name}")
 
     l.setLevel(level)
     l.addHandler(fileHandler)
