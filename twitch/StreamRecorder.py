@@ -11,6 +11,7 @@ import signal
 from pathlib import Path
 from threading import Thread
 
+# based on https://github.com/ancalentari/twitch-stream-recorder/blob/master/twitch-recorder.py
 
 # Python version between 3.8 and 3.11 needed with modules requests and streamlink
 # Just adjust the 2 variables below.
