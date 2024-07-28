@@ -13,5 +13,5 @@
 - Install and make the DestinationPath to a media library
 
 ## Credits
-- Base Scripot used as base:
+- Base Script used as base:
   - https://github.com/ancalentari/twitch-stream-recorder/blob/master/twitch-recorder.py
