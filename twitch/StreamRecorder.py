@@ -20,8 +20,8 @@ from threading import Thread
 #ffmpegBinary = "/usr/bin/ffmpeg"
 streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpegBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
-DestinationPath = "StreamRecorder"
-VideoLibraryPath = "Streams"
+DestinationPath = "g:\StreamRecorder"
+VideoLibraryPath = "G:\Streams"
 DefaultChannels = ["staiy"]
 
 class TwitchResponseStatus(enum.Enum):
@@ -89,15 +89,17 @@ class TwitchRecorder:
         try:
             args = None
             if os.name == 'nt':
-                args = [ffmpegBinary, "-err_detect ignore_err", "-n", "-i", f"\'{recorded_filename}\'", "-c", "copy", f"\'{processed_filename}\'"]
+                args = [ffmpegBinary, "-err_detect","ignore_err", "-n", "-i", recorded_filename, "-c", "copy", processed_filename]
                 self.logger.info(f"Start ffmpeg with args:{' '.join(args)}")
             else:
-                args = f"{ffmpegBinary} -err_detect ignore_err -n -i \'{recorded_filename}\' -c copy \'{processed_filename}\'"
+                args = f"{ffmpegBinary} -err_detect ignore_err -n -i \"{recorded_filename}\" -c copy \"{processed_filename}\""
                 self.logger.info(f"starting ffmpeg with args (could take a few minutes without output):{args}")
             logData = subprocess.Popen(args, stderr=subprocess.PIPE, shell=True).communicate()
-            self.logger.info(f"Ended ffmpeg{logData}")
-            if os.path.exists(processed_filename): 
+            if os.path.exists(processed_filename):
+                self.logger.info("ended ffmpeg successfully")
                 os.remove(recorded_filename)
+            else: 
+                self.logger.error(f"Ended ffmpeg with error: {logData}")
         except Exception as e:
             self.logger.error(f"Exception on ffmpeg call: {e}")
 
@@ -123,7 +125,7 @@ class TwitchRecorder:
         if os.name == 'nt':
             args = [streamlinkBinary, "--json", f"twitch.tv/{self.username}"]
         else:
-            args = f"\'{streamlinkBinary}\' --json twitch.tv/{self.username}"
+            args = f"\"{streamlinkBinary}\" --json twitch.tv/{self.username}"
         data = None
         try:
             output = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
@@ -199,15 +201,14 @@ class TwitchRecorder:
                 args = None
                 if os.name == 'nt':
                     args = [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", 
-                            "--logfile", f"\'{os.path.join(DestinationPath,f'{self.username}_streamlink.log')}\'", 
-                            f"twitch.tv/{self.username }", f"\'{quality}\'", "-o", "\'{recorded_filename}\'"]
-                    self.logger.info(f"Start StreamLink with args:{' '.join(args)}")
+                            "--logfile", os.path.join(DestinationPath,f'{self.username}_streamlink.log'), 
+                            f"twitch.tv/{self.username }", quality, "-o", recorded_filename]
+                    self.logger.info(f"Start StreamLink with args:{subprocess.list2cmdline(args)}")
                 else:
                     args = f"{streamlinkBinary} --twitch-disable-ads --twitch-low-latency " + \
-                            f"--logfile \'{os.path.join(DestinationPath,f'{self.username}_streamlink.log')}\' twitch.tv/{self.username} " + \
-                            f"{quality} -o \'{recorded_filename}\'"  
+                            f"--logfile \"{os.path.join(DestinationPath,f'{self.username}_streamlink.log')}\" twitch.tv/{self.username} " + \
+                            f"{quality} -o \"{recorded_filename}\"" 
                     self.logger.info(f"Start StreamLink with args:{args}")
-                
                 
                 retData = subprocess.Popen(args, stdout=subprocess.PIPE, shell=True).communicate()
                 
@@ -215,8 +216,6 @@ class TwitchRecorder:
                     self.logger.info("recording stream is done, processing video file")
                 else:
                     self.logger.error(f"recording stream failed: {retData}")
-                    
-
 
                 if not os.path.exists(os.path.join(VideoLibraryPath, self.username)):
                     os.makedirs(os.path.join(VideoLibraryPath, self.username))
@@ -269,8 +268,8 @@ def createThread(recorder : TwitchRecorder) -> Thread:
 
 def setup_logger(logger_name, log_file, level=logging.INFO) -> logging.Logger:
     l = logging.getLogger(logger_name)
-    formatter = logging.Formatter('%(asctime)s;%(levelname)s;%(message)s')
-    fileHandler = logging.FileHandler(log_file, mode='w')
+    formatter = logging.Formatter(u"%(asctime)s;%(levelname)s;%(message)s")
+    fileHandler = logging.FileHandler(log_file, mode='w',encoding='utf-8')
     fileHandler.setFormatter(formatter)
     streamHandler = logging.StreamHandler()
     streamHandler.setFormatter(formatter)
