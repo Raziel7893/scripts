@@ -20,9 +20,9 @@ from threading import Thread
 #ffmpegBinary = "/usr/bin/ffmpeg"
 streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpegBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
-DestinationPath = "g:\StreamRecorder"
-VideoLibraryPath = "G:\Streams"
-DefaultChannels = ["staiy"]
+DestinationPath = "StreamRecorder"
+VideoLibraryPath = "Streams"
+DefaultChannels = ["dieservincentg"]
 
 class TwitchResponseStatus(enum.Enum):
     ONLINE = 0
@@ -106,13 +106,15 @@ class TwitchRecorder:
     def check_user(self):
         title = None
         status = TwitchResponseStatus.ERROR
-        quality = "720p"
+        quality = defaultQuality
         try:
             data = self.getStreamData()
             if data and self.streamIsOnline(data):
                 status = TwitchResponseStatus.ONLINE
                 title = self.getTitleOfStream(data)
                 quality = self.getAvailableStreamQuality(data)
+            elif not data:
+                self.logger.error(f"no data gathered")
             else:
                 status = TwitchResponseStatus.OFFLINE
 
@@ -146,24 +148,32 @@ class TwitchRecorder:
         streams = data["streams"]
         if len(streams) < 1:
             return 
-        if quality in streams:
+        if quality in streams: 
             return quality
-        if stream:
-            keys = list(streams.keys())
-            for key in keys:
-                targetRes = int(defaultQuality.replace("p"))
-                curRes = int(keys.replace("p"))
-                #get the highst resolution under 720p in case the streamer uses some weird resolutions
-                if not curRes or curRes == -1:
+        if streams:
+            keys = []
+            
+            for key in list(streams.keys()):
+                if not "p" in key: 
                     continue
-                if(targetRes < curRes):
-                    quality = key
+                if defaultQuality.split("p", 1)[0] == key.split("p", 1)[0]:
+                    return key
+                try:
+                    keys.append(int(key.split("p", 1)[0]))
+                    #.split("p", 1)[0] finds even stuff like p60 for 60fps
+                except Exception as e:
+                    pass
+                
+            keys.sort(reverse=True)
+            for curRes in keys:
+                targetRes = int(defaultQuality.split("p", 1)[0])
+                #get the highst resolution under target in case the streamer uses some weird resolutions
+                if(targetRes > curRes): 
+                    return curRes
                 else:
                     continue
-            return key
-        else:
-            #fallback
-            return "720p,480p,best"
+
+        return "720p,480p,best"
 
     def getPartString(self) -> int:
         part = ""
