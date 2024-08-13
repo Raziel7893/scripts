@@ -20,9 +20,9 @@ from threading import Thread
 #ffmpegBinary = "/usr/bin/ffmpeg"
 streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpegBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
-DestinationPath = "StreamRecorder"
-VideoLibraryPath = "Streams"
-DefaultChannels = ["dieservincentg"]
+DestinationPath = "g:/StreamRecorder"
+VideoLibraryPath = "G:/Streams"
+DefaultChannels = ["staiy"]
 
 class TwitchResponseStatus(enum.Enum):
     ONLINE = 0
@@ -211,7 +211,8 @@ class TwitchRecorder:
                 args = None
                 if os.name == 'nt':
                     args = [streamlinkBinary, "--twitch-disable-ads", "--twitch-low-latency", 
-                            "--logfile", os.path.join(DestinationPath,f'{self.username}_streamlink.log'), 
+                            "--logfile", os.path.join(DestinationPath,f'{self.username}_{datetime.datetime.now() \
+                    .strftime("%Y-%m-%d")}_streamlink.log'), 
                             f"twitch.tv/{self.username }", quality, "-o", recorded_filename]
                     self.logger.info(f"Start StreamLink with args:{subprocess.list2cmdline(args)}")
                 else:
