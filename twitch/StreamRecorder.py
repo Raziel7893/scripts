@@ -175,7 +175,7 @@ class TwitchRecorder:
 
         return "720p,480p,best"
 
-    def getPartString(self) -> int:
+    def getPartString(self) -> str:
         part = ""
         destPath = os.path.join(VideoLibraryPath, self.username)
         files = list(Path(destPath).glob(f'*{datetime.datetime.now().strftime("%Y-%m-%d")}*'))
