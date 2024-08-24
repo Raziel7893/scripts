@@ -4,7 +4,10 @@
 - You need Python version between 3.8 and 3.11 
 - Install streamlink for your system https://streamlink.github.io/install.html (include ffmpg at best)
 - example call to execute:(use pythonw.exe to start silent without a window on windows)
-  - python3.11 StreamRecorder.py -s "C:/Program Files/Streamlink/bin/streamlink.exe" -f "C:/Program Files/Streamlink/ffmpeg/ffmpeg.exe" -t "d:/StreamRecorder" -d "d:/Streams" -c dracon staiy 
+  - python3.11 StreamRecorder.py -s "C:/Program Files/Streamlink/bin/streamlink.exe" -f "C:/Program Files/Streamlink/ffmpeg/ffmpeg.exe" -t "d:/StreamRecorder" -d "d:/Streams" -c dracon staiy
+- if you just want to call StreamRecorder.py you can switch the comment on lines 268&269 and use fixed parameters
+- all parameters are optional and will use the old defaults if skipped, so you can use it also as
+  - python3.11 StreamRecorder.py -c channel1 channel2 
 
 ## WebAccess
 - If you want to access those comfortably i recommend Jellyfin (https://jellyfin.org/)
