@@ -248,7 +248,6 @@ class TwitchRecorder:
 def main(argv):
     recorderThreads = {}
     recorders = {}
-    channelNames = DefaultChannels
 
     #cmd params
     parser = argparse.ArgumentParser(description='Records multiple streams via streamlink'+
@@ -270,17 +269,18 @@ def main(argv):
     if not args.channels:
         print(f"No channels chosen")
         exit()
+    channelNames = args.channels
 
     if not os.path.exists(args.temp):
         os.makedirs(args.temp)
     if not os.path.exists(args.destRoot):
         os.makedirs(args.destRoot)
     
-    print(f"channels to monitor: {' '.join(args.channels)}")
+    print(f"channels to monitor: {' '.join(channelNames)}")
     
     signal.signal(signal.SIGTERM, sigterm_handler)
 
-    for channelName in args.channels:
+    for channelName in channelNames:
         recorder = TwitchRecorder(channelName, setup_logger(channelName,os.path.join(args.temp,f"{channelName}twitch-recorder.log")),args.ffmpeg, args.streamlink, args.temp,args.destRoot)
         recorders[channelName] = recorder
         recorderThreads[channelName] = createThread(recorder)
