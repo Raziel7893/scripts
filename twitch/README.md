@@ -11,9 +11,8 @@
 - Install and make the DestinationPath to a media library
 
 ## Current cmd arguments
-usage: StreamRecorder.py [-h] [-s [STREAMLINK]] [-f [FFMPEG]] [-t [TEMP]] [-d [DESTROOT]] [-c CHANNELS [CHANNELS ...]]
-
 Records multiple streams via streamlink per default a ffmpeg fix run is done while copying the stream to the destination, as ad skipping causes some audio desync
+
 usage: StreamRecorder.py [-h] [-s [STREAMLINK]] [-f [FFMPEG]] [-t [TEMP]] [-d [DESTROOT]] [-c CHANNELS [CHANNELS ...]]
 
 Records multiple streams via streamlink per default a ffmpeg fix run is done while copying the stream to the destination, as ad skipping causes some audio desync
