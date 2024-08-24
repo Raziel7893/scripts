@@ -23,7 +23,6 @@ streamlinkBinary = "C:\\Program Files\\Streamlink\\bin\\streamlink.exe"
 ffmpegBinary = "C:\\Program Files\\Streamlink\\ffmpeg\\ffmpeg.exe"
 RecorderTemp = "g:/StreamRecorder"
 DestinationPath = "G:/Streams"
-DefaultChannels = ["staiy"]
 
 class TwitchResponseStatus(enum.Enum):
     ONLINE = 0
@@ -264,6 +263,7 @@ def main(argv):
                         help='path where the stream should be copied when recording is finished')
     parser.add_argument('-c','--channels', nargs='+', default=[],
                         help='channels to monitor')
+    
     args = parser.parse_args()
     #args = parser.parse_args(["-s", "C:/Program Files/Streamlink/bin/streamlink.exe", "-f", "C:/Program Files/Streamlink/ffmpeg/ffmpeg.exe", "-t", "d:/StreamRecorder", "-d", "d:/Streams", "-c", "staiy", "vincentg", "dlz_jimmy"])
 
