@@ -14,16 +14,25 @@
 usage: StreamRecorder.py [-h] [-s [STREAMLINK]] [-f [FFMPEG]] [-t [TEMP]] [-d [DESTROOT]] [-c CHANNELS [CHANNELS ...]]
 
 Records multiple streams via streamlink per default a ffmpeg fix run is done while copying the stream to the destination, as ad skipping causes some audio desync
+usage: StreamRecorder.py [-h] [-s [STREAMLINK]] [-f [FFMPEG]] [-t [TEMP]] [-d [DESTROOT]] [-c CHANNELS [CHANNELS ...]]
+
+Records multiple streams via streamlink per default a ffmpeg fix run is done while copying the stream to the destination, as ad skipping causes some audio desync
 
 options:
+
   -h, --help            show this help message and exit
+  
   -s [STREAMLINK], --streamlink [STREAMLINK]
                         full path to your streamlink binary
+						
   -f [FFMPEG], --ffmpeg [FFMPEG]
                         full path to your ffmpeg binary
+						
   -t [TEMP], --temp [TEMP]
                         temp folder for streamlink to record to
+						
   -d [DESTROOT], --destRoot [DESTROOT]
                         path where the stream should be copied when recording is finished
+						
   -c CHANNELS [CHANNELS ...], --channels CHANNELS [CHANNELS ...]
                         channels to monitor
