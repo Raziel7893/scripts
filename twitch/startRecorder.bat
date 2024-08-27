@@ -1,0 +1,1 @@
+python3.11 StreamRecorder.py -s "C:/Program Files/Streamlink/bin/streamlink.exe" -f "C:/Program Files/Streamlink/ffmpeg/ffmpeg.exe" -t "d:/StreamRecorder" -d "d:/Streams" -c dracon staiy 

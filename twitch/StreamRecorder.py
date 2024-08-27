@@ -218,9 +218,7 @@ class TwitchRecorder:
                             f"twitch.tv/{self.username }", quality, "-o", recorded_filename]
                     self.logger.info(f"Start StreamLink with args:{subprocess.list2cmdline(args)}")
                 else:
-                    args = f"{self.streamLink} --twitch-disable-ads --twitch-low-latency " + \
-                            f"--logfile \"{os.path.join(self.root_path,f'{self.username}_streamlink.log')}\" twitch.tv/{self.username} " + \
-                            f"{quality} -o \"{recorded_filename}\"" 
+                    args = f"{self.streamLink} --twitch-disable-ads --twitch-low-latency " + f"--logfile \"{os.path.join(self.root_path,f'{self.username}_streamlink.log')}\" twitch.tv/{self.username} {quality} -o \"{recorded_filename}\"" 
                     self.logger.info(f"Start StreamLink with args:{args}")
                 
                 retData = subprocess.Popen(args, stdout=subprocess.PIPE, shell=True).communicate()
@@ -281,7 +279,7 @@ def main(argv):
     signal.signal(signal.SIGTERM, sigterm_handler)
 
     for channelName in channelNames:
-        recorder = TwitchRecorder(channelName, setup_logger(channelName,os.path.join(args.temp,f"{channelName}twitch-recorder.log")),args.ffmpeg, args.streamlink, args.temp,args.destRoot)
+        recorder = TwitchRecorder(channelName, setup_logger(channelName,os.path.join(args.temp,f"{channelName}twitch-recorder_{datetime.datetime.now().strftime("%Y-%m-%d")}.log")),args.ffmpeg, args.streamlink, args.temp,args.destRoot)
         recorders[channelName] = recorder
         recorderThreads[channelName] = createThread(recorder)
     while True:
