@@ -21,9 +21,9 @@ backupFolder = "/Backup/"
 def CheckDiskUsage(path: str):
     base = path
     if '\\' in base:
-        base = base.split('\\')
+        base = base.split('\\')[0]
     if '/' in base:
-        base = base.split('/')
+        base = base.split('/')[0]
     total, used, free = shutil.disk_usage(base)
     if used/total > 0.95:
         print(
