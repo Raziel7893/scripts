@@ -39,6 +39,8 @@ class TwitchRecorder:
         self.disable_ffmpeg = False
         self.refresh = 60
         self.root_path = root_path
+
+        self.log_dir = os.path.join(root_path, "logs")
         self.postOfflineLog = True
         self.ffmpeg = ffmpeg
         self.streamLink = streamlink
@@ -52,7 +54,7 @@ class TwitchRecorder:
         # path to recorded stream
         recorded_path = os.path.join(self.root_path, "recorded", self.username)
         # path to finished video, errors removed
-        processed_path = os.path.join(self.root_path, "processed", self.username)
+        processed_path = os.path.join(self.videoLib, self.username)
 
         # create directory for recordedPath and processedPath if not exist
         if os.path.isdir(recorded_path) is False:
@@ -184,63 +186,72 @@ class TwitchRecorder:
         files = list(Path(destPath).glob(f'*{datetime.datetime.now().strftime("%Y-%m-%d")}*'))
         if files and len(files) != 0:
             part = f" part {len(files)+1}"
+        else:
+            destPath = os.path.join(self.root_path, "recorded" , self.username)
+            files = list(Path(destPath).glob(f'*{datetime.datetime.now().strftime("%Y-%m-%d")}*'))
+            part = f" part {len(files)+1}"
+
         return part
 
     def loop_check(self, recorded_path, processed_path):
         while True:
-            self.apiReturn = {}
-            status, title, quality = self.check_user()  
-            if status == TwitchResponseStatus.OFFLINE:
-                if self.postOfflineLog:
-                    self.logger.info("%s currently offline, checking again in %s seconds. This log will not reapear to allow HDDs to spin down ", self.username, self.refresh)
-                    self.postOfflineLog = False 
-                Sleep(self.refresh)
-            elif status == TwitchResponseStatus.ONLINE:
-                self.postOfflineLog = True
-                self.logger.info("%s online, stream recording in session", self.username)
+            try:
+                self.apiReturn = {}
+                status, title, quality = self.check_user()  
+                if status == TwitchResponseStatus.OFFLINE:
+                    if self.postOfflineLog:
+                        self.logger.info("%s currently offline, checking again in %s seconds. This log will not reapear to allow HDDs to spin down ", self.username, self.refresh)
+                        self.postOfflineLog = False 
+                    Sleep(self.refresh)
+                elif status == TwitchResponseStatus.ONLINE:
+                    self.postOfflineLog = True
+                    self.logger.info("%s online, stream recording in session", self.username)
 
-                filename = self.username + " - " + datetime.datetime.now() \
-                    .strftime("%Y-%m-%d") + self.getPartString() +" - " + title + ".mp4"
+                    filename = self.username + " - " + datetime.datetime.now() \
+                        .strftime("%Y-%m-%d") + self.getPartString() +" - " + title + ".mp4"
 
-                # clean filename from unnecessary characters
-                filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
+                    # clean filename from unnecessary characters
+                    filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
 
-                recorded_filename = os.path.join(recorded_path, filename)
-                processed_filename = os.path.join(self.videoLib, self.username, filename)
+                    recorded_filename = os.path.join(recorded_path, filename)
+                    processed_filename = os.path.join(processed_path, filename)
 
-                # start streamlink process
-                if not os.path.isfile(self.streamLink):
-                    self.logger.CRITICAL("Streamlink not set")
-                args = None
-                if os.name == 'nt':
-                    args = [self.streamLink, "--twitch-disable-ads", "--twitch-low-latency", 
-                            "--logfile", os.path.join(self.root_path,f'{self.username}_{datetime.datetime.now().strftime("%Y-%m-%d")}_streamlink.log'), 
-                            f"twitch.tv/{self.username }", quality, "-o", recorded_filename]
-                    self.logger.info(f"Start StreamLink with args:{subprocess.list2cmdline(args)}")
-                else:
-                    args = f"{self.streamLink} --twitch-disable-ads --twitch-low-latency " + f"--logfile \"{os.path.join(self.root_path,f'{self.username}_streamlink.log')}\" twitch.tv/{self.username} {quality} -o \"{recorded_filename}\"" 
-                    self.logger.info(f"Start StreamLink with args:{args}")
-                
-                retData = subprocess.Popen(args, stdout=subprocess.PIPE, shell=True).communicate()
-                
-                if os.path.exists(recorded_filename):
-                    self.logger.info("recording stream is done, processing video file")
-                else:
-                    self.logger.error(f"recording stream failed: {retData}")
-
-                if not os.path.exists(os.path.join(self.videoLib, self.username)):
-                    os.makedirs(os.path.join(self.videoLib, self.username))
-                if os.path.exists(recorded_filename) is True:
-                    self.process_recorded_file(recorded_filename, processed_filename)
-                else:
-                    self.logger.info("skip fixing, file not found")
+                    # start streamlink process
+                    if not os.path.isfile(self.streamLink):
+                        self.logger.CRITICAL("Streamlink not set")
+                    args = None
+                    if os.name == 'nt':
+                        args = [self.streamLink, "--twitch-disable-ads", "--twitch-low-latency", 
+                                "--logfile", os.path.join(self.log_dir,f'{self.username}_{datetime.datetime.now().strftime("%Y-%m-%d")}_streamlink.log'), 
+                                f"twitch.tv/{self.username }", quality, "-o", recorded_filename]
+                        self.logger.info(f"Start StreamLink with args:{subprocess.list2cmdline(args)}")
+                    else:
+                        args = f"{self.streamLink} --twitch-disable-ads --twitch-low-latency " + f"--logfile \"{os.path.join(self.log_dir,f'{self.username}_streamlink.log')}\" twitch.tv/{self.username} {quality} -o \"{recorded_filename}\"" 
+                        self.logger.info(f"Start StreamLink with args:{args}")
                     
-                self.logger.info("recording stream is done, processing video file")
-                if os.path.exists(recorded_filename) and os.path.exists(processed_filename) is False : #ffmpg failed, copy without fix
-                    shutil.move(recorded_filename, processed_filename)
+                    retData = subprocess.Popen(args, stdout=subprocess.PIPE, shell=True).communicate()
+                    
+                    if os.path.exists(recorded_filename):
+                        self.logger.info("recording stream is done, processing video file")
+                    else:
+                        self.logger.error(f"recording stream failed: {retData}")
 
-                self.logger.info("processing is done, going back to checking...")
-                Sleep(self.refresh)
+                    if not os.path.exists(os.path.join(self.videoLib, self.username)):
+                        os.makedirs(os.path.join(self.videoLib, self.username))
+                    if os.path.exists(recorded_filename) is True:
+                        self.process_recorded_file(recorded_filename, processed_filename)
+                    else:
+                        self.logger.info("skip fixing, file not found")
+                        
+                    self.logger.info("recording stream is done, processing video file")
+                    if os.path.exists(recorded_filename) and os.path.exists(processed_filename) is False : #ffmpg failed, copy without fix
+                        shutil.move(recorded_filename, processed_filename)
+
+                    self.logger.info("processing is done, going back to checking...")
+                    Sleep(self.refresh)
+                    
+            except Exception as ex:
+                self.logger.critical(ex)
 
 
 def main(argv):
@@ -269,17 +280,20 @@ def main(argv):
         exit()
     channelNames = args.channels
 
+    logDir = os.path.join(args.temp, "logs")
+
     if not os.path.exists(args.temp):
         os.makedirs(args.temp)
+        os.makedirs(logDir)
     if not os.path.exists(args.destRoot):
         os.makedirs(args.destRoot)
     
-    print(f"channels to monitor: {' '.join(channelNames)}")
+    print(f"channels to monitor: {', '.join(channelNames)}")
     
     signal.signal(signal.SIGTERM, sigterm_handler)
 
     for channelName in channelNames:
-        recorder = TwitchRecorder(channelName, setup_logger(channelName,os.path.join(args.temp,f"{channelName}twitch-recorder_{datetime.datetime.now().strftime("%Y-%m-%d")}.log")),args.ffmpeg, args.streamlink, args.temp,args.destRoot)
+        recorder = TwitchRecorder(channelName, setup_logger(channelName,os.path.join(logDir,f"{channelName}_twitch-recorder_{datetime.datetime.now().strftime("%Y-%m-%d")}.log")),args.ffmpeg, args.streamlink, args.temp,args.destRoot)
         recorders[channelName] = recorder
         recorderThreads[channelName] = createThread(recorder)
     while True:
@@ -299,7 +313,7 @@ def createThread(recorder : TwitchRecorder) -> Thread:
 def setup_logger(logger_name, log_file, level=logging.INFO) -> logging.Logger:
     l = logging.getLogger(logger_name)
     formatter = logging.Formatter(u"%(asctime)s;%(levelname)s;%(message)s")
-    fileHandler = logging.FileHandler(log_file, mode='w',encoding='utf-8')
+    fileHandler = logging.FileHandler(log_file, mode='a',encoding='utf-8')
     fileHandler.setFormatter(formatter)
     streamHandler = logging.StreamHandler()
     streamHandler.setFormatter(formatter)
