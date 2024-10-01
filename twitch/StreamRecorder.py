@@ -188,8 +188,9 @@ class TwitchRecorder:
             part = f" part {len(files)+1}"
         else:
             destPath = os.path.join(self.root_path, "recorded" , self.username)
-            files = list(Path(destPath).glob(f'*{datetime.datetime.now().strftime("%Y-%m-%d")}*'))
-            part = f" part {len(files)+1}"
+            files = list(Path(destPath).glob(f'*{datetime.datetime.now().strftime("%Y-%m-%d")}*'))        
+            if files and len(files) != 0:
+                part = f" part {len(files)+1}"
 
         return part
 
