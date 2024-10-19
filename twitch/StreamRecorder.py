@@ -285,6 +285,7 @@ def main(argv):
 
     if not os.path.exists(args.temp):
         os.makedirs(args.temp)
+    if not os.path.exists(logDir):
         os.makedirs(logDir)
     if not os.path.exists(args.destRoot):
         os.makedirs(args.destRoot)
