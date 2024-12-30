@@ -142,8 +142,10 @@ class TwitchRecorder:
         return data
 
     def getTitleOfStream(self, data) -> str:
-        return data["metadata"]["title"]
-
+        try:
+            return data["metadata"]["title"]
+        except Exception as e:
+            return "default Title"
     def streamIsOnline(self, data) -> bool:
         return len(data["streams"]) != 0
 
@@ -208,14 +210,8 @@ class TwitchRecorder:
                     self.postOfflineLog = True
                     self.logger.info("%s online, stream recording in session", self.username)
 
-                    partStr = self.getPartString()
-                    if not partStr:
-                        partStr = ""
-                    if not title:
-                        title = "default"
-
                     filename = self.username + " - " + datetime.datetime.now() \
-                        .strftime("%Y-%m-%d") + partStr +" - " + title + ".mp4"
+                        .strftime("%Y-%m-%d") + self.getPartString() +" - " + title + ".mp4"
 
                     # clean filename from unnecessary characters
                     filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
