@@ -208,8 +208,14 @@ class TwitchRecorder:
                     self.postOfflineLog = True
                     self.logger.info("%s online, stream recording in session", self.username)
 
+                    partStr = self.getPartString()
+                    if not partStr:
+                        partStr = ""
+                    if not title:
+                        title = "default"
+
                     filename = self.username + " - " + datetime.datetime.now() \
-                        .strftime("%Y-%m-%d") + self.getPartString() +" - " + title + ".mp4"
+                        .strftime("%Y-%m-%d") + partStr +" - " + title + ".mp4"
 
                     # clean filename from unnecessary characters
                     filename = "".join(x for x in filename if x.isalnum() or x in [" ", "-", "_", "."])
@@ -221,6 +227,7 @@ class TwitchRecorder:
                     if not os.path.isfile(self.streamLink):
                         self.logger.CRITICAL("Streamlink not set")
                     args = None
+                    
                     if os.name == 'nt':
                         args = [self.streamLink, "--twitch-disable-ads", "--twitch-low-latency", 
                                 "--logfile", os.path.join(self.log_dir,f'{self.username}_{datetime.datetime.now().strftime("%Y-%m-%d")}_streamlink.log'), 
