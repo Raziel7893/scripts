@@ -11,6 +11,7 @@ import signal
 from pathlib import Path
 from threading import Thread
 import argparse
+import psutil
 
 
 # Python version between 3.8 and 3.11 needed with modules requests and streamlink
@@ -275,9 +276,14 @@ def main(argv):
                         help='path where the stream should be copied when recording is finished')
     parser.add_argument('-c','--channels', nargs='+', default=[],
                         help='channels to monitor')
+    parser.add_argument('-single', action='store_true',
+                        help='channels to monitor')
     
     args = parser.parse_args()
     #args = parser.parse_args(["-s", "C:/Program Files/Streamlink/bin/streamlink.exe", "-f", "C:/Program Files/Streamlink/ffmpeg/ffmpeg.exe", "-t", "d:/StreamRecorder", "-d", "d:/Streams", "-c", "staiy", "vincentg", "dlz_jimmy"])
+
+    if(args.single and IsAlreadyRunning()):
+        return -1
 
     if not args.channels:
         print(f"No channels chosen")
@@ -298,7 +304,7 @@ def main(argv):
     signal.signal(signal.SIGTERM, sigterm_handler)
 
     for channelName in channelNames:
-        recorder = TwitchRecorder(channelName, setup_logger(channelName,os.path.join(logDir,f"{channelName}_twitch-recorder_{datetime.datetime.now().strftime("%Y-%m-%d")}.log")),args.ffmpeg, args.streamlink, args.temp,args.destRoot)
+        recorder = TwitchRecorder(channelName, setup_logger(channelName,os.path.join(logDir,f"{channelName}_twitch-recorder_{datetime.datetime.now().strftime('%Y-%m-%d')}.log")),args.ffmpeg, args.streamlink, args.temp,args.destRoot)
         recorders[channelName] = recorder
         recorderThreads[channelName] = createThread(recorder)
     while True:
@@ -342,6 +348,18 @@ def Sleep(duration):
         time.sleep(duration)
     except KeyboardInterrupt:
         os._exit(1)
+
+def IsAlreadyRunning():
+    processes = []
+    for p in psutil.process_iter():
+        if 'python' in p.name():
+            cmdline= p.cmdline()
+            for arg  in cmdline:
+                if os.path.basename(__file__) in arg:
+                    processes.append(p.pid)
+    if len(processes) > 1:
+        return True
+    return False
 
 def sigterm_handler(_signo, _stack_frame):
     # Raises SystemExit(0):
