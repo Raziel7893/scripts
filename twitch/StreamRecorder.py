@@ -353,10 +353,14 @@ def IsAlreadyRunning():
     processes = []
     for p in psutil.process_iter():
         if 'python' in p.name():
-            cmdline= p.cmdline()
-            for arg  in cmdline:
-                if os.path.basename(__file__) in arg:
-                    processes.append(p.pid)
+            try:
+                cmdline= p.cmdline()
+                for arg  in cmdline:
+                    if os.path.basename(__file__) in arg:
+                        processes.append(p.pid)
+            except:
+                print("could not check commandline as this requires AdminRights")
+                return False
     if len(processes) > 1:
         return True
     return False
