@@ -11,6 +11,8 @@ import signal
 from pathlib import Path
 from threading import Thread
 
+import psutil
+
 
 # Python version between 3.8 and 3.11 needed with modules requests and streamlink
 # Just adjust the 2 variables below.
@@ -248,6 +250,9 @@ def main(argv):
     recorders = {}
     channelNames = DefaultChannels
 
+    if(IsAlreadyRunning()):
+        return -1
+
     if not os.path.exists(VideoLibraryPath):
         os.makedirs(VideoLibraryPath)
     if not os.path.exists(DestinationPath):
@@ -304,6 +309,22 @@ def Sleep(duration):
         time.sleep(duration)
     except KeyboardInterrupt:
         os._exit(1)
+
+def IsAlreadyRunning():
+    processes = []
+    for p in psutil.process_iter():
+        if 'python' in p.name():
+            try:
+                cmdline= p.cmdline()
+                for arg  in cmdline:
+                    if os.path.basename(__file__) in arg:
+                        processes.append(p.pid)
+            except:
+                print("could not check commandline as this requires AdminRights")
+                return False
+    if len(processes) > 1:
+        return True
+    return False
 
 def sigterm_handler(_signo, _stack_frame):
     # Raises SystemExit(0):
